@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS498: IoT -- Lab 2</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #4a90e2;
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .arrow-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 200px;
+            margin: 20px auto;
+        }
+        .arrow {
+            fill: #4a90e2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .arrow:hover {
+            fill: #2c3e50;
+            transform: scale(1.1);
+        }
+        #upArrow { grid-column: 2; }
+        #leftArrow { grid-column: 1; grid-row: 2; }
+        #rightArrow { grid-column: 3; grid-row: 2; }
+        #downArrow { grid-column: 2; grid-row: 3; }
+        .status-dot {
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .status-item {
+            margin-bottom: 10px;
+        }
+        .form-control, .btn {
+            border-radius: 20px;
+        }
+        .btn-primary {
+            background-color: #4a90e2;
+            border-color: #4a90e2;
+        }
+        .btn-primary:hover {
+            background-color: #2c3e50;
+            border-color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">CS498: IoT -- Lab 2</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Car Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="arrow-container">
+                            <svg id="upArrow" class="arrow" viewBox="0 0 24 24" width="50" height="50">
+                                <path d="M12 4l-8 8h6v8h4v-8h6z"/>
+                            </svg>
+                            <svg id="leftArrow" class="arrow" viewBox="0 0 24 24" width="50" height="50">
+                                <path d="M4 12l8-8v6h8v4h-8v6z"/>
+                            </svg>
+                            <svg id="rightArrow" class="arrow" viewBox="0 0 24 24" width="50" height="50">
+                                <path d="M20 12l-8-8v6h-8v4h8v6z"/>
+                            </svg>
+                            <svg id="downArrow" class="arrow" viewBox="0 0 24 24" width="50" height="50">
+                                <path d="M12 20l8-8h-6v-8h-4v8h-6z"/>
+                            </svg>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot text-success">●</span> Battery: <span id="battery" class="font-weight-bold">N/A</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-dot text-success">●</span> Voltage: <span id="voltage" class="font-weight-bold">N/A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Car Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <input id="message" type="text" class="form-control" placeholder="Message to Pi">
+                            <button class="btn btn-primary mt-2" onclick="send_data('MESSAGE:'+document.getElementById('message').value)">Submit</button>
+                        </div>
+                        <div class="status-item">
+                            <span id="direction_dot" class="status-dot text-success">●</span> Car Direction: <span id="direction" class="font-weight-bold">Stopped</span>
+                        </div>
+                        <div class="status-item">
+                            <span id="speed_dot" class="status-dot text-success">●</span> Speed: <span id="speed" class="font-weight-bold">0.0 m/s</span>
+                        </div>
+                        <div class="status-item">
+                            <span id="autonomous_dot" class="status-dot text-success">●</span> Autonomous Mode: <span id="autonomous-mode" class="font-weight-bold">OFF</span>
+                        </div>
+                        <div class="status-item">
+                            Bluetooth return value: <span id="bluetooth" class="font-weight-bold"></span>
+                        </div>
+                        <div class="status-item">
+                            Connection Status: <span id="connection-status" class="font-weight-bold text-danger">Disconnected</span>
+                        </div>
+                        <div class="form-group mt-3">
+                            <select id="connection-type" class="form-control">
+                                <option value="Wifi">Wifi</option>
+                                <option value="Bluetooth">Bluetooth</option>
+                            </select>
+                        </div>
+                        <div class="form-group mt-3">
+                            <select id="move-direction" class="form-control">
+                                <option value="Forward">Forward</option>
+                                <option value="Backward">Backward</option>
+                                <option value="Left">Left</option>
+                                <option value="Right">Right</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input id="move-duration" type="number" class="form-control" placeholder="Duration (seconds)" step="0.1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <input id="move-distance" type="number" class="form-control" placeholder="Distance (meters)" step="0.1" min="0">
+                        </div>
+                        <button id="custom-move-btn" class="btn btn-primary btn-block">Move</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="./index.js"></script>
+</body>
+</html>
