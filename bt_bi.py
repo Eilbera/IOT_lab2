@@ -21,6 +21,7 @@ def bluetooth_client(mac_address, port=1):
     print(f"Bluetooth client connected to {mac_address}")
     return sock
 
+#demo
 async def websocket_to_bluetooth(websocket, bt_sock):
     try:
         async for message in websocket:
@@ -37,6 +38,7 @@ def bluetooth_to_websocket(bt_sock, websocket):
         except Exception as e:
             print(f"Error in Bluetooth receiving: {e}")
             break
+
 
 async def handle_connection(websocket, path, bt_sock):
     print("New WebSocket connection established")
